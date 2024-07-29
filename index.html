@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TO$$KN: Mario-style Coin Toss</title>
+    <title>TO$$KN: Mario-style TON Coin Toss</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tonweb@0.0.60/dist/tonweb.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
         
@@ -189,12 +190,16 @@
         <div id="game" class="active">
             <div class="stats">
                 <div class="stat">
-                    <div>COINS</div>
+                    <div>TO$$KN</div>
                     <div class="stat-value" id="balance">1000</div>
                 </div>
                 <div class="stat">
                     <div>BET</div>
                     <div class="stat-value" id="betAmount">10</div>
+                </div>
+                <div class="stat">
+                    <div>TON</div>
+                    <div class="stat-value" id="tonBalance">0</div>
                 </div>
             </div>
             <div id="coinContainer">
@@ -218,27 +223,58 @@
 
     <script>
         let tg = window.Telegram.WebApp;
-        let balance = 1000;
+        let balance = 0;
         let betAmount = 10;
-        let leaderboard = [
-            { name: "Mario", score: 5000 },
-            { name: "Luigi", score: 4500 },
-            { name: "Peach", score: 4000 },
-            { name: "Yoshi", score: 3500 },
-            { name: "Toad", score: 3000 }
-        ];
+        let leaderboard = [];
+        let tonweb;
+        let wallet;
 
-        function login() {
-            // In a real app, you'd verify the user on your server here
-            // For this example, we'll just use the user's name from Telegram
+        async function initTON() {
+            tonweb = new TonWeb(new TonWeb.HttpProvider('https://toncenter.com/api/v2/jsonRPC'));
+            
+            // In a real app, you'd securely manage the user's keys
+            // This is just for demonstration purposes
+            const keyPair = TonWeb.utils.keyPair();
+            wallet = tonweb.wallet.create({publicKey: keyPair.publicKey});
+        }
+
+        async function login() {
             if (tg.initDataUnsafe.user) {
                 document.getElementById('loginContainer').style.display = 'none';
                 document.getElementById('gameContainer').style.display = 'block';
-                leaderboard.push({ name: tg.initDataUnsafe.user.first_name, score: balance });
+                
+                await initTON();
+
+                balance = localStorage.getItem('userBalance');
+                if (balance === null) {
+                    balance = 1000; // Starting balance for new users
+                    localStorage.setItem('userBalance', balance);
+                } else {
+                    balance = parseInt(balance);
+                }
+
+                const lastReward = localStorage.getItem('lastReward');
+                const now = new Date().toDateString();
+                if (lastReward !== now) {
+                    balance += 50; // Daily reward
+                    localStorage.setItem('lastReward', now);
+                    localStorage.setItem('userBalance', balance);
+                    alert('You received a daily reward of 50 TO$$KN!');
+                }
+
+                await updateBalance();
                 updateLeaderboard();
             } else {
                 alert('Unable to get user information. Please try again.');
             }
+        }
+
+        async function updateBalance() {
+            document.getElementById('balance').textContent = balance;
+            
+            const address = await wallet.getAddress();
+            const tonBalance = await tonweb.getBalance(address);
+            document.getElementById('tonBalance').textContent = TonWeb.utils.fromNano(tonBalance);
         }
 
         function showTab(tabName) {
@@ -272,7 +308,7 @@
             document.getElementById('betAmount').textContent = betAmount;
         }
 
-        function flipCoin(choice) {
+        async function flipCoin(choice) {
             if (balance < betAmount) {
                 document.getElementById('result').textContent = "Not enough TO$$KN!";
                 return;
@@ -281,7 +317,7 @@
             const coin = document.getElementById('coin');
             coin.style.animation = 'flip 1s ease-out, jump 1s ease-out';
             
-            setTimeout(() => {
+            setTimeout(async () => {
                 const outcome = Math.random() < 0.5 ? 'heads' : 'tails';
                 coin.style.transform = outcome === 'heads' ? 'translate(-50%, -50%) rotateY(1800deg)' : 'translate(-50%, -50%) rotateY(1980deg)';
                 
@@ -295,11 +331,14 @@
                     document.getElementById('result').style.color = '#e84118';
                 }
 
-                document.getElementById('balance').textContent = balance;
+                localStorage.setItem('userBalance', balance);
+                await updateBalance();
 
                 const playerIndex = leaderboard.findIndex(p => p.name === tg.initDataUnsafe.user.first_name);
                 if (playerIndex !== -1) {
                     leaderboard[playerIndex].score = balance;
+                } else {
+                    leaderboard.push({ name: tg.initDataUnsafe.user.first_name, score: balance });
                 }
                 leaderboard.sort((a, b) => b.score - a.score);
             }, 1000);
@@ -309,7 +348,6 @@
             }, 1100);
         }
 
-        // Initialize Telegram WebApp
         tg.expand();
     </script>
 </body>
