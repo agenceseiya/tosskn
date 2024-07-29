@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TO$$KN: Mario-style TON Coin Toss</title>
+    <title>TO$$KN: Mario-style Coin Toss</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tonweb@0.0.60/dist/tonweb.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
         
@@ -190,16 +189,12 @@
         <div id="game" class="active">
             <div class="stats">
                 <div class="stat">
-                    <div>TO$$KN</div>
+                    <div>COINS</div>
                     <div class="stat-value" id="balance">1000</div>
                 </div>
                 <div class="stat">
                     <div>BET</div>
                     <div class="stat-value" id="betAmount">10</div>
-                </div>
-                <div class="stat">
-                    <div>TON</div>
-                    <div class="stat-value" id="tonBalance">0</div>
                 </div>
             </div>
             <div id="coinContainer">
@@ -223,28 +218,22 @@
 
     <script>
         let tg = window.Telegram.WebApp;
-        let balance = 0;
+        let balance = 1000;
         let betAmount = 10;
-        let leaderboard = [];
-        let tonweb;
-        let wallet;
+        let leaderboard = [
+            { name: "Mario", score: 5000 },
+            { name: "Luigi", score: 4500 },
+            { name: "Peach", score: 4000 },
+            { name: "Yoshi", score: 3500 },
+            { name: "Toad", score: 3000 }
+        ];
 
-        async function initTON() {
-            tonweb = new TonWeb(new TonWeb.HttpProvider('https://toncenter.com/api/v2/jsonRPC'));
-            
-            // In a real app, you'd securely manage the user's keys
-            // This is just for demonstration purposes
-            const keyPair = TonWeb.utils.keyPair();
-            wallet = tonweb.wallet.create({publicKey: keyPair.publicKey});
-        }
-
-        async function login() {
+        function login() {
             if (tg.initDataUnsafe.user) {
                 document.getElementById('loginContainer').style.display = 'none';
                 document.getElementById('gameContainer').style.display = 'block';
                 
-                await initTON();
-
+                // Load or initialize user's balance
                 balance = localStorage.getItem('userBalance');
                 if (balance === null) {
                     balance = 1000; // Starting balance for new users
@@ -253,6 +242,7 @@
                     balance = parseInt(balance);
                 }
 
+                // Check for daily reward
                 const lastReward = localStorage.getItem('lastReward');
                 const now = new Date().toDateString();
                 if (lastReward !== now) {
@@ -262,19 +252,15 @@
                     alert('You received a daily reward of 50 TO$$KN!');
                 }
 
-                await updateBalance();
+                updateBalance();
                 updateLeaderboard();
             } else {
                 alert('Unable to get user information. Please try again.');
             }
         }
 
-        async function updateBalance() {
+        function updateBalance() {
             document.getElementById('balance').textContent = balance;
-            
-            const address = await wallet.getAddress();
-            const tonBalance = await tonweb.getBalance(address);
-            document.getElementById('tonBalance').textContent = TonWeb.utils.fromNano(tonBalance);
         }
 
         function showTab(tabName) {
@@ -308,7 +294,7 @@
             document.getElementById('betAmount').textContent = betAmount;
         }
 
-        async function flipCoin(choice) {
+        function flipCoin(choice) {
             if (balance < betAmount) {
                 document.getElementById('result').textContent = "Not enough TO$$KN!";
                 return;
@@ -317,7 +303,7 @@
             const coin = document.getElementById('coin');
             coin.style.animation = 'flip 1s ease-out, jump 1s ease-out';
             
-            setTimeout(async () => {
+            setTimeout(() => {
                 const outcome = Math.random() < 0.5 ? 'heads' : 'tails';
                 coin.style.transform = outcome === 'heads' ? 'translate(-50%, -50%) rotateY(1800deg)' : 'translate(-50%, -50%) rotateY(1980deg)';
                 
@@ -332,7 +318,7 @@
                 }
 
                 localStorage.setItem('userBalance', balance);
-                await updateBalance();
+                updateBalance();
 
                 const playerIndex = leaderboard.findIndex(p => p.name === tg.initDataUnsafe.user.first_name);
                 if (playerIndex !== -1) {
