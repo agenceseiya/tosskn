@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TO$$KN: Mario-style Coin Toss</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tonweb@0.0.60/dist/tonweb.js"></script>
+    <style>
+        /* Your existing CSS here */
+    </style>
+</head>
+<body>
+    <!-- Your existing HTML here -->
+    <script type="module">
+        import { connectWallet, sendTransaction } from '/lib/ton_integration.js';
+        
+        let tg = window.Telegram.WebApp;
+        let balance = 1000;
+        let betAmount = 10;
+        let leaderboard = [];
+
+        async function login() {
+            if (tg.initDataUnsafe.user) {
+                document.getElementById('loginContainer').style.display = 'none';
+                document.getElementById('gameContainer').style.display = 'block';
+                
+                const address = await connectWallet();
+                if (address) {
+                    balance = await getBalanceFromContract(address);
+                } else {
+                    balance = localStorage.getItem('userBalance');
+                    if (balance === null) {
+                        balance = 1000;
+                        localStorage.setItem('userBalance', balance);
+                    } else {
+                        balance = parseInt(balance);
+                    }
+                }
+
+                const lastReward = localStorage.getItem('lastReward');
+                const now = new Date().toDateString();
+                if (lastReward !== now) {
+                    balance += 50;
+                    localStorage.setItem('lastReward', now);
+                    if (address) {
+                        await updateBalanceInContract(address, balance);
+                    } else {
+                        localStorage.setItem('userBalance', balance);
+                    }
+                    alert('You received a daily reward of 50 TO$$KN!');
+                }
+
+                updateBalance();
+                await updateLeaderboard();
+            } else {
+                alert('Unable to get user information. Please try again.');
+            }
+        }
+
+        function updateBalance() {
+            document.getElementById('balance').textContent = balance;
+        }
+
+        function showTab(tabName) {
+            // Your existing showTab function here
+        }
+
+        async function updateLeaderboard() {
+            try {
+                const response = await fetch('/api/leaderboard');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch leaderboard');
+                }
+                leaderboard = await response.json();
+                const leaderboardList = document.getElementById('leaderboardList');
+                leaderboardList.innerHTML = '';
+                leaderboard.forEach((player, index) => {
+                    const li = document.createElement('li');
+                    li.textContent = `${index + 1}. ${player.name}: ${player.score}`;
+                    leaderboardList.appendChild(li);
+                });
+            } catch (error) {
+                console.error('Error fetching leaderboard:', error);
+            }
+        }
+
+        function changeBet(amount) {
+            betAmount = Math.max(10, Math.min(balance, betAmount + amount));
+            document.getElementById('betAmount').textContent = betAmount;
+        }
+
+        async function flipCoin(choice) {
+            if (balance < betAmount) {
+                document.getElementById('result').textContent = "Not enough TO$$KN!";
+                return;
+            }
+
+            const coin = document.getElementById('coin');
+            coin.style.animation = 'flip 1s ease-out, jump 1s ease-out';
+            
+            setTimeout(async () => {
+                const outcome = Math.random() < 0.5 ? 'heads' : 'tails';
+                coin.style.transform = outcome === 'heads' ? 'translate(-50%, -50%) rotateY(1800deg)' : 'translate(-50%, -50%) rotateY(1980deg)';
+                
+                if (outcome === choice) {
+                    balance += betAmount;
+                    document.getElementById('result').textContent = `You won ${betAmount} TO$$KN!`;
+                    document.getElementById('result').style.color = '#4cd137';
+                } else {
+                    balance -= betAmount;
+                    document.getElementById('result').textContent = `You lost ${betAmount} TO$$KN.`;
+                    document.getElementById('result').style.color = '#e84118';
+                }
+
+                localStorage.setItem('userBalance', balance);
+                updateBalance();
+
+                await fetch('/api/leaderboard', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        name: tg.initDataUnsafe.user.first_name, 
+                        score: balance, 
+                        address: tg.initDataUnsafe.user.id 
+                    }),
+                });
+
+                await updateLeaderboard();
+            }, 1000);
+
+            setTimeout(() => {
+                coin.style.animation = '';
+            }, 1100);
+        }
+
+        tg.expand();
+
+        // Expose functions to window object
+        window.login = login;
+        window.showTab = showTab;
+        window.changeBet = changeBet;
+        window.flipCoin = flipCoin;
+    </script>
+</body>
+</html>
