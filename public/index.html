@@ -3,56 +3,218 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TO$$KN: Bet On Toss and Tap to Earn</title>
+    <title>TO$$KN: Mario-style Coin Toss</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tonweb@0.0.60/dist/tonweb.js"></script>
     <style>
-        /* Your existing CSS here */
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Press Start 2P', cursive;
+            background: linear-gradient(135deg, #5433FF, #20BDFF, #A5FECB);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #loginContainer, #gameContainer {
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+            box-sizing: border-box;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(8px);
+            border: 2px solid rgba(255, 255, 255, 0.18);
+        }
+        h1 {
+            font-size: 2em;
+            text-align: center;
+            color: #ffd700;
+            text-shadow: 2px 2px 0px #ff6b6b;
+            margin-bottom: 20px;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        .stat {
+            text-align: center;
+            background: #4a4a4a;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.8em;
+        }
+        .stat-value {
+            font-size: 1.2em;
+            color: #ffd700;
+            margin-top: 5px;
+        }
+        #coinContainer {
+            width: 100%;
+            height: 200px;
+            background: #87CEEB;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        #coin {
+            width: 80px;
+            height: 80px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: transform 0.5s ease-out;
+        }
+        .coin-face {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            backface-visibility: hidden;
+            background-color: #ffd700;
+            border-radius: 50%;
+            box-shadow: inset 0 0 10px #ffaa00;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 40px;
+            color: #ffaa00;
+        }
+        .coin-back {
+            transform: rotateY(180deg);
+        }
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.8rem;
+            padding: 10px 15px;
+            background: #ffd700;
+            color: #4a4a4a;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 0px #d4af37;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0px #d4af37;
+        }
+        button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0px #d4af37;
+        }
+        #result {
+            text-align: center;
+            margin-bottom: 20px;
+            min-height: 1em;
+            font-size: 1.2em;
+        }
+        #leaderboard {
+            background: #4a4a4a;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 20px;
+        }
+        #leaderboard h2 {
+            text-align: center;
+            color: #ffd700;
+            margin-top: 0;
+        }
+        #leaderboard p {
+            margin: 5px 0;
+            font-size: 0.8em;
+        }
+        @keyframes flip {
+            0% { transform: translate(-50%, -50%) rotateY(0deg); }
+            100% { transform: translate(-50%, -50%) rotateY(1800deg); }
+        }
+        @keyframes jump {
+            0%, 100% { top: 50%; }
+            50% { top: 30%; }
+        }
     </style>
 </head>
 <body>
-    <!-- Your existing HTML here -->
-    <script type="module">
-        import { connectWallet, sendTransaction } from '/lib/ton_integration.js';
-        
+    <div id="loginContainer">
+        <h1>TO$$KN</h1>
+        <p style="text-align: center;">Welcome! Please log in with your Telegram account to play.</p>
+        <div class="buttons">
+            <button onclick="login()">Log In with Telegram</button>
+        </div>
+    </div>
+
+    <div id="gameContainer" style="display: none;">
+        <h1>TO$$KN</h1>
+        <div class="stats">
+            <div class="stat">
+                <div>COINS</div>
+                <div class="stat-value" id="balance">1000</div>
+            </div>
+            <div class="stat">
+                <div>BET</div>
+                <div class="stat-value" id="betAmount">10</div>
+            </div>
+        </div>
+        <div id="coinContainer">
+            <div id="coin">
+                <div class="coin-face">$</div>
+                <div class="coin-face coin-back">$</div>
+            </div>
+        </div>
+        <div class="buttons">
+            <button onclick="changeBet(-10)">-</button>
+            <button onclick="flipCoin('heads')">HEADS</button>
+            <button onclick="flipCoin('tails')">TAILS</button>
+            <button onclick="changeBet(10)">+</button>
+        </div>
+        <div id="result"></div>
+        <button onclick="showLeaderboard()">Show Leaderboard</button>
+        <div id="leaderboard"></div>
+    </div>
+
+    <script>
         let tg = window.Telegram.WebApp;
         let balance = 1000;
         let betAmount = 10;
-        let leaderboard = [];
 
-        async function login() {
+        function login() {
             if (tg.initDataUnsafe.user) {
                 document.getElementById('loginContainer').style.display = 'none';
                 document.getElementById('gameContainer').style.display = 'block';
                 
-                const address = await connectWallet();
-                if (address) {
-                    balance = await getBalanceFromContract(address);
+                // Load or initialize user's balance
+                balance = localStorage.getItem('userBalance');
+                if (balance === null) {
+                    balance = 1000; // Starting balance for new users
+                    localStorage.setItem('userBalance', balance);
                 } else {
-                    balance = localStorage.getItem('userBalance');
-                    if (balance === null) {
-                        balance = 1000;
-                        localStorage.setItem('userBalance', balance);
-                    } else {
-                        balance = parseInt(balance);
-                    }
+                    balance = parseInt(balance);
                 }
 
+                // Check for daily reward
                 const lastReward = localStorage.getItem('lastReward');
                 const now = new Date().toDateString();
                 if (lastReward !== now) {
-                    balance += 50;
+                    balance += 50; // Daily reward
                     localStorage.setItem('lastReward', now);
-                    if (address) {
-                        await updateBalanceInContract(address, balance);
-                    } else {
-                        localStorage.setItem('userBalance', balance);
-                    }
+                    localStorage.setItem('userBalance', balance);
                     alert('You received a daily reward of 50 TO$$KN!');
                 }
 
                 updateBalance();
-                await updateLeaderboard();
+                updateLeaderboard();
             } else {
                 alert('Unable to get user information. Please try again.');
             }
@@ -62,35 +224,12 @@
             document.getElementById('balance').textContent = balance;
         }
 
-        function showTab(tabName) {
-            // Your existing showTab function here
-        }
-
-        async function updateLeaderboard() {
-            try {
-                const response = await fetch('/api/leaderboard');
-                if (!response.ok) {
-                    throw new Error('Failed to fetch leaderboard');
-                }
-                leaderboard = await response.json();
-                const leaderboardList = document.getElementById('leaderboardList');
-                leaderboardList.innerHTML = '';
-                leaderboard.forEach((player, index) => {
-                    const li = document.createElement('li');
-                    li.textContent = `${index + 1}. ${player.name}: ${player.score}`;
-                    leaderboardList.appendChild(li);
-                });
-            } catch (error) {
-                console.error('Error fetching leaderboard:', error);
-            }
-        }
-
         function changeBet(amount) {
             betAmount = Math.max(10, Math.min(balance, betAmount + amount));
             document.getElementById('betAmount').textContent = betAmount;
         }
 
-        async function flipCoin(choice) {
+        function flipCoin(choice) {
             if (balance < betAmount) {
                 document.getElementById('result').textContent = "Not enough TO$$KN!";
                 return;
@@ -99,7 +238,7 @@
             const coin = document.getElementById('coin');
             coin.style.animation = 'flip 1s ease-out, jump 1s ease-out';
             
-            setTimeout(async () => {
+            setTimeout(() => {
                 const outcome = Math.random() < 0.5 ? 'heads' : 'tails';
                 coin.style.transform = outcome === 'heads' ? 'translate(-50%, -50%) rotateY(1800deg)' : 'translate(-50%, -50%) rotateY(1980deg)';
                 
@@ -115,20 +254,7 @@
 
                 localStorage.setItem('userBalance', balance);
                 updateBalance();
-
-                await fetch('/api/leaderboard', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ 
-                        name: tg.initDataUnsafe.user.first_name, 
-                        score: balance, 
-                        address: tg.initDataUnsafe.user.id 
-                    }),
-                });
-
-                await updateLeaderboard();
+                updateLeaderboard();
             }, 1000);
 
             setTimeout(() => {
@@ -136,13 +262,32 @@
             }, 1100);
         }
 
-        tg.expand();
+        function updateLeaderboard() {
+            fetch('/api/leaderboard', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    name: tg.initDataUnsafe.user.first_name, 
+                    score: balance
+                }),
+            });
+        }
 
-        // Expose functions to window object
-        window.login = login;
-        window.showTab = showTab;
-        window.changeBet = changeBet;
-        window.flipCoin = flipCoin;
+        function showLeaderboard() {
+            fetch('/api/leaderboard')
+                .then(response => response.json())
+                    .then(data => {
+                        const leaderboardDiv = document.getElementById('leaderboard');
+                        leaderboardDiv.innerHTML = '<h2>Leaderboard</h2>';
+                        data.forEach((entry, index) => {
+                            leaderboardDiv.innerHTML += `<p>${index + 1}. ${entry.name}: ${entry.score}</p>`;
+                        });
+                    });
+        }
+
+        tg.expand();
     </script>
 </body>
 </html>
