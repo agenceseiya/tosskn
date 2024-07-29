@@ -1,0 +1,16 @@
+{
+  "name": "tosskin-game",
+  "version": "1.0.0",
+  "description": "TO$$KN Mario-style coin toss game",
+  "main": "index.js",
+  "scripts": {
+    "start": "vercel dev",
+    "deploy": "vercel deploy --prod"
+  },
+  "dependencies": {
+    "mongodb": "^4.1.0"
+  },
+  "devDependencies": {
+    "vercel": "^23.0.0"
+  }
+}
