@@ -1,0 +1,26 @@
+const { Telegraf } = require('telegraf');
+
+const bot = new Telegraf(process.env.BOT_TOKEN);
+
+bot.command('start', (ctx) => {
+  const welcomeText = "In the world of Gold Miner, loyal dog miners will lead you on a bountiful journey, perfectly combining wealth extraction with strategy!";
+  const imageUrl = "your_dog_miner_image_url_here.jpg";
+  
+  ctx.replyWithPhoto({ url: imageUrl }, {
+    caption: welcomeText,
+    reply_markup: {
+      inline_keyboard: [[
+        { text: "Start Mining", web_app: { url: process.env.WEBAPP_URL } }
+      ]]
+    }
+  });
+});
+
+module.exports = async (req, res) => {
+  try {
+    await bot.handleUpdate(req.body);
+  } catch (error) {
+    console.error('Error in bot update handler:', error);
+  }
+  res.status(200).end();
+};
