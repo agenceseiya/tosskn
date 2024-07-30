@@ -3,50 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TO$$KN: Space Coin Flip</title>
+    <title>Space Hamster Bot</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         
         body {
             margin: 0;
             padding: 0;
-            font-family: 'Exo 2', sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
             color: #fff;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
         }
-        #loginContainer, #gameContainer {
+        #gameContainer {
             width: 100%;
-            max-width: 400px;
+            max-width: 380px;
             padding: 20px;
             box-sizing: border-box;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
             border-radius: 30px;
             backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.1);
         }
-        #profile {
+        #header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
         }
+        #profile {
+            display: flex;
+            align-items: center;
+        }
+        #avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #ff6b6b;
+            margin-right: 10px;
+        }
         #username {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #fff;
+            font-weight: 600;
         }
         #profit {
             background: linear-gradient(90deg, #FFD700, #FFA500);
             padding: 5px 15px;
             border-radius: 20px;
             color: #000;
-            font-weight: bold;
+            font-weight: 600;
         }
         .daily-rewards {
             display: flex;
@@ -60,96 +67,90 @@
             text-align: center;
             width: 30%;
         }
-        #coinContainer {
-            width: 200px;
-            height: 200px;
-            margin: 20px auto;
-            position: relative;
-        }
-        #coinContainer::after {
-            content: '';
-            position: absolute;
-            top: -10px;
-            left: -10px;
-            right: -10px;
-            bottom: -10px;
-            background: linear-gradient(45deg, #ff00ff, #00ffff);
-            border-radius: 50%;
-            z-index: -1;
-            filter: blur(20px);
+        .reward-box div:first-child {
+            font-size: 0.8em;
             opacity: 0.7;
         }
-        .buttons {
-            display: flex;
-            justify-content: space-around;
-            margin: 20px 0;
+        .reward-box div:last-child {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-top: 5px;
         }
-        button {
-            font-family: 'Exo 2', sans-serif;
-            font-size: 1rem;
-            padding: 12px 25px;
-            background: linear-gradient(135deg, #4cd137, #44bd32);
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(76, 209, 55, 0.3);
-        }
-        button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(76, 209, 55, 0.4);
-        }
-        #betContainer {
+        #hamsterContainer {
+            width: 250px;
+            height: 250px;
+            margin: 20px auto;
+            position: relative;
+            background: radial-gradient(circle, #8e2de2, #4a00e0);
+            border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
-            margin: 20px 0;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 10px;
-            border-radius: 25px;
+            overflow: hidden;
         }
-        #betAmount {
-            font-size: 1.2em;
-            margin: 0 15px;
+        #hamsterImage {
+            width: 80%;
+            height: 80%;
+            object-fit: contain;
+        }
+        .glow {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: conic-gradient(transparent, transparent, transparent, #00ffff);
+            animation: rotate 4s linear infinite;
+        }
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #energyBar {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            height: 30px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        #energyFill {
+            width: 24%;
+            height: 100%;
+            background: linear-gradient(90deg, #4cd137, #44bd32);
+            border-radius: 20px;
         }
         #actionButtons {
             display: flex;
-            justify-content: space-around;
+            justify-content: space-between;
             margin-top: 20px;
         }
-        #actionButtons button {
-            background: linear-gradient(135deg, #9c27b0, #3f51b5);
+        .action-button {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 15px;
+            padding: 15px 0;
             width: 22%;
-            padding: 10px 0;
-            font-size: 0.8em;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9em;
             display: flex;
             flex-direction: column;
             align-items: center;
+            cursor: pointer;
         }
-        #actionButtons button::before {
+        .action-button::before {
             content: '🚀';
             font-size: 1.5em;
             margin-bottom: 5px;
         }
-        .login-button {
-            background: linear-gradient(45deg, #ff00e0, #00ffff) !important;
-            font-size: 1.2em !important;
-            margin-top: 20px;
-        }
     </style>
 </head>
 <body>
-    <div id="loginContainer">
-        <h1 style="text-align: center; color: #FFD700;">TO$$KN Space Flip</h1>
-        <p style="text-align: center; color: #a0a0a0;">Embark on a cosmic journey of chance!</p>
-        <button class="login-button" onclick="login()">Launch with Telegram</button>
-    </div>
-
-    <div id="gameContainer" style="display: none;">
-        <div id="profile">
-            <div id="username">Username</div>
-            <div id="profit">Profit: 0</div>
+    <div id="gameContainer">
+        <div id="header">
+            <div id="profile">
+                <div id="avatar"></div>
+                <div id="username">Darren</div>
+            </div>
+            <div id="profit">PRO Profit 3000</div>
         </div>
         <div class="daily-rewards">
             <div class="reward-box">
@@ -165,110 +166,23 @@
                 <div>500</div>
             </div>
         </div>
-        <div id="coinContainer"></div>
-        <div class="buttons">
-            <button onclick="flipCoin('heads')">HEADS</button>
-            <button onclick="flipCoin('tails')">TAILS</button>
+        <div id="hamsterContainer">
+            <div class="glow"></div>
+            <img id="hamsterImage" src="https://your-hamster-image-url.com/hamster.png" alt="Space Hamster">
         </div>
-        <div id="betContainer">
-            <button onclick="changeBet(-10)">-</button>
-            <div id="betAmount">Bet: 10 TO$$K</div>
-            <button onclick="changeBet(10)">+</button>
+        <div id="energyBar">
+            <div id="energyFill"></div>
         </div>
         <div id="actionButtons">
-            <button onclick="showMine()">Mine</button>
-            <button onclick="showFriends()">Friends</button>
-            <button onclick="showEarn()">Earn</button>
-            <button onclick="showAirdrop()">Airdrop</button>
+            <button class="action-button" onclick="showMine()">Mine</button>
+            <button class="action-button" onclick="showFriends()">Friends</button>
+            <button class="action-button" onclick="showEarn()">Earn</button>
+            <button class="action-button" onclick="showAirdrop()">Airdrop</button>
         </div>
     </div>
 
     <script>
         let tg = window.Telegram.WebApp;
-        let scene, camera, renderer, coin;
-        let betAmount = 10;
-        let profit = 0;
-
-        function login() {
-            if (tg.initDataUnsafe.user) {
-                document.getElementById('loginContainer').style.display = 'none';
-                document.getElementById('gameContainer').style.display = 'block';
-                document.getElementById('username').textContent = tg.initDataUnsafe.user.username || "Space Cadet";
-                init();
-            } else {
-                alert('Unable to get user information. Please try again.');
-            }
-        }
-
-        function init() {
-            scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setSize(200, 200);
-            document.getElementById('coinContainer').appendChild(renderer.domElement);
-
-            const geometry = new THREE.CylinderGeometry(1, 1, 0.1, 32);
-            const material = new THREE.MeshPhongMaterial({
-                color: 0xffd700,
-                specular: 0xffffff,
-                shininess: 100,
-            });
-            coin = new THREE.Mesh(geometry, material);
-            scene.add(coin);
-
-            const light = new THREE.PointLight(0xffffff, 1, 100);
-            light.position.set(0, 0, 10);
-            scene.add(light);
-
-            camera.position.z = 5;
-
-            animate();
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-            coin.rotation.y += 0.01;
-            renderer.render(scene, camera);
-        }
-
-        function flipCoin(choice) {
-            coin.rotation.x = 0;
-            const flipDuration = 1000;
-            const startTime = Date.now();
-
-            function animateFlip() {
-                const elapsedTime = Date.now() - startTime;
-                const progress = elapsedTime / flipDuration;
-
-                if (progress < 1) {
-                    coin.rotation.x = progress * Math.PI * 10;
-                    requestAnimationFrame(animateFlip);
-                } else {
-                    const outcome = Math.random() < 0.5 ? 'heads' : 'tails';
-                    coin.rotation.x = outcome === 'heads' ? 0 : Math.PI;
-                    
-                    if (outcome === choice) {
-                        profit += betAmount;
-                        alert(`You won ${betAmount} TO$$K!`);
-                    } else {
-                        profit -= betAmount;
-                        alert(`You lost ${betAmount} TO$$K.`);
-                    }
-                    updateProfit();
-                }
-            }
-
-            animateFlip();
-        }
-
-        function changeBet(amount) {
-            betAmount = Math.max(10, betAmount + amount);
-            document.getElementById('betAmount').textContent = `Bet: ${betAmount} TO$$K`;
-        }
-
-        function updateProfit() {
-            document.getElementById('profit').textContent = `Profit: ${profit}`;
-        }
 
         function showMine() { alert("Mine feature coming soon!"); }
         function showFriends() { alert("Friends feature coming soon!"); }
@@ -276,6 +190,8 @@
         function showAirdrop() { alert("Airdrop feature coming soon!"); }
 
         tg.expand();
+
+        // You'll need to replace 'your-hamster-image-url.com/hamster.png' with the actual URL of your space hamster image
     </script>
 </body>
 </html>
