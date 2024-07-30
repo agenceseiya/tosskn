@@ -19,7 +19,7 @@
             justify-content: center;
             align-items: center;
         }
-        #gameContainer {
+        #loginContainer, #gameContainer {
             width: 100%;
             max-width: 380px;
             padding: 20px;
@@ -27,6 +27,28 @@
             background: rgba(255, 255, 255, 0.05);
             border-radius: 30px;
             backdrop-filter: blur(10px);
+        }
+        #loginContainer {
+            text-align: center;
+        }
+        .login-button {
+            background: linear-gradient(45deg, #ff00e0, #00ffff);
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            color: #fff;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            margin-top: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 5px 15px rgba(255, 0, 224, 0.4);
+        }
+        .login-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 0, 224, 0.6);
         }
         #header {
             display: flex;
@@ -135,6 +157,11 @@
             flex-direction: column;
             align-items: center;
             cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .action-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-3px);
         }
         .action-button::before {
             content: '🚀';
@@ -144,11 +171,17 @@
     </style>
 </head>
 <body>
-    <div id="gameContainer">
+    <div id="loginContainer">
+        <h1>Space Hamster Bot</h1>
+        <p>Embark on an intergalactic journey with your cosmic companion!</p>
+        <button class="login-button" onclick="login()">Launch with Telegram</button>
+    </div>
+
+    <div id="gameContainer" style="display: none;">
         <div id="header">
             <div id="profile">
                 <div id="avatar"></div>
-                <div id="username">Darren</div>
+                <div id="username">Astronaut</div>
             </div>
             <div id="profit">PRO Profit 3000</div>
         </div>
@@ -184,6 +217,16 @@
     <script>
         let tg = window.Telegram.WebApp;
 
+        function login() {
+            if (tg.initDataUnsafe.user) {
+                document.getElementById('loginContainer').style.display = 'none';
+                document.getElementById('gameContainer').style.display = 'block';
+                document.getElementById('username').textContent = tg.initDataUnsafe.user.username || "Astronaut";
+            } else {
+                alert('Unable to get user information. Please try again.');
+            }
+        }
+
         function showMine() { alert("Mine feature coming soon!"); }
         function showFriends() { alert("Friends feature coming soon!"); }
         function showEarn() { alert("Earn feature coming soon!"); }
@@ -191,7 +234,7 @@
 
         tg.expand();
 
-        // You'll need to replace 'your-hamster-image-url.com/hamster.png' with the actual URL of your space hamster image
+        // Replace 'your-hamster-image-url.com/hamster.png' with the actual URL of your space hamster image
     </script>
 </body>
 </html>
